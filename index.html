@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="author" content="Cory Silva">
+    <meta name="description" content="Special Olympics floor hockey lineup generator">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link rel="stylesheet" href="style.css">
+    <title>Lineup!</title>
+  </head>
+  <body>
+    <div id="app" class="container-fluid" style="max-width:1024px">
+
+      <!-- Title and Instructions -->
+      <h1 class="display-4 mt-4">Lineup!</h1>
+      <p class="lead">
+          First, add your players marking who is active and then click "Build Lineup".
+      </p>
+
+      <form @submit="buildLineup" v-bind:class="{'was-validated': wasValidated}" novalidate="true">
+
+      <!-- Controls -->
+      <button type="button" class="btn btn-outline-primary mb-3" @click="addPlayer">Add Player</button>
+      <button type="submit" class="btn btn-outline-success mb-3">Build Lineup</button>
+      <button type="button" class="btn btn-outline-secondary mb-3" @click="demo">Demo</button>
+      <!-- Players -->
+
+      <table v-cloak class="table table-responsive-md players">
+        <caption>
+          <small class="text-muted font-italic">Team roster: {{activePlayersCount}} active, {{players.length}} total</small>
+        </caption>
+        <thead>
+          <tr>
+            <th style="width:36px">Active</th>
+            <th>Name</th>
+            <th>Number</th>
+            <th>Position</th>
+            <th>Skill</th>
+            <th>Delete</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="(player, index) in players">
+            <td>
+              <button class="btn btn-sm"
+                type="button"
+                v-bind:class="{'btn-primary': player.active, 'btn-outline-secondary': !player.active}"
+                @click="player.active = !player.active">
+                &nbsp;{{player.active ? 'Yes' : 'No'}}&nbsp;
+              </button>
+            </td>
+            <td>
+              <input class="form-control form-control-sm"
+                style="min-width:150px"
+                aria-label="name"
+                type="text"
+                placeholder="full name"
+                pattern="[^~]*"
+                v-model.lazy.trim="player.name"
+                required>
+                <div class="invalid-feedback">Please enter a name. ("~" not allowed)</div>
+            </td>
+            <td>
+              <input class="form-control form-control-sm"
+                style="min-width:72px"
+                aria-label="number"
+                type="text"
+                pattern="[0-9]*"
+                maxlength="2"
+                placeholder="jersey"
+                v-model.lazy.trim="player.number"
+                required>
+                <div class="invalid-feedback">Please enter a jersey number. (</div>
+            </td>
+            <td>
+              <select class="form-control form-control-sm"
+                style="min-width:96px"
+                aria-label="position"
+                v-model="player.position">
+                <option v-if="player.position !== undefined" :value="undefined">Select an option</option>
+                <option value="Goalie">Goalie</option>
+                <option value="Defenseman">Defense</option>
+                <option value="Center">Center</option>
+                <option value="Wing">Wing</option>
+              </select>
+            </td>
+            <td>
+              <input class="form-control form-control-sm"
+                style="min-width:72px"
+                aria-label="skill"
+                type="number"
+                step="1"
+                min="0"
+                max="100"
+                placeholder="number"
+                v-model.lazy.trim="player.skill"
+                required>
+                <div class="invalid-feedback">Please enter a skill level.</div>
+            </td>
+            <td>
+              <button class="btn btn-outline-danger btn-sm" type="button" @click="deletePlayer(index)">&nbsp;X&nbsp;</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      </form>
+
+      <!-- Lineup Modal -->
+      <div class="modal fade lineup-modal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">The Lineup</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <table class="table table-bordered table-sm lineup table-responsive-md">
+                <thead>
+                  <tr>
+                    <th colspan="4"></th>
+                    <th colspan="3" class="text-center">Period 1</th>
+                    <th colspan="3" class="text-center">Period 2</th>
+                    <th colspan="3" class="text-center">Period 3</th>
+                  </tr>
+                  <tr>
+                    <th width="32px" class="text-right">#</th>
+                    <th style="min-width:150px">Name</th>
+                    <th width="48px">No.</th>
+                    <th width="108px">Position</th>
+                    <th class="text-center" width="42px">1</th>
+                    <th class="text-center" width="42px">2</th>
+                    <th class="text-center" width="42px">3</th>
+                    <th class="text-center" width="42px">4</th>
+                    <th class="text-center" width="42px">5</th>
+                    <th class="text-center" width="42px">6</th>
+                    <th class="text-center" width="42px">7</th>
+                    <th class="text-center" width="42px">8</th>
+                    <th class="text-center" width="42px">9</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(player, index) in lineup.players">
+                    <th class="text-right">{{index + 1}}</th>
+                    <td class="text-nowrap">{{player.name}}</td>
+                    <td>{{player.number}}</td>
+                    <td class="font-italic">{{player.position}}</td>
+                    <td v-for="line in player.lines" v-bind:class="{crossed: line}"></td>
+                  </tr>
+                </tbody>
+              </table>
+              <dl class="row text-muted">
+                <dt class="col-6 col-sm-4 col-md-3">Standard Deviation</dt>
+                <dd class="col-6 col-sm-8 col-md-9">{{lineup.sd}}</dd>
+                <dt class="col-6 col-sm-4 col-md-3">Variance</dt>
+                <dd class="col-6 col-sm-8 col-md-9">{{lineup.var}}</dd>
+                <dt class="col-6 col-sm-4 col-md-3">Mean</dt>
+                <dd class="col-6 col-sm-8 col-md-9">{{lineup.mean}}</dd>
+                <dt class="col-6 col-sm-4 col-md-3">Line Scores</dt>
+                <dd class="col-6 col-sm-8 col-md-9">{{lineup.scores}}</dd>
+              </dl>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline-primary" data-dismiss="modal">Ok</button>
+            </div>
+          </div>
+        </div>
+      </div><!-- end Lineup Modal -->
+    </div><!-- end Container -->
+
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+    <script src="main.js" type="module"></script>
+    <script src="test.js" type="module"></script>
+
+  </body>
+</html>
