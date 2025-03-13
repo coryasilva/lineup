@@ -7,16 +7,15 @@ import { sortPlayersByName } from './lineup.js'
  * @return {Player[]}
  */
 export function fetch(key) {
-  // fetch from localstorage
-  var players = parsePlayersJson(localStorage.getItem(key))
-
   // fetch from URL
-  var urlPlayers = parsePlayersUrlHash(window.location.hash)
-  if (urlPlayers.length > 0) {
-    players = urlPlayers
-  }
+  const urlPlayers = parsePlayersUrlHash(window.location.hash)
+  // fetch from localstorage
+  const lsPlayers = parsePlayersJson(localStorage.getItem(key))
 
-  return sortPlayersByName(players)
+  if (urlPlayers.length > 0) {
+    return sortPlayersByName(urlPlayers)
+  }
+  return sortPlayersByName(lsPlayers)
 }
 
 /**
@@ -27,7 +26,6 @@ export function fetch(key) {
 export function save(key, players) {
   // Save to URL
   window.location.hash = buildPlayersUrlHash(players)
-
   // Save to LocalStorage
   localStorage.setItem(key, JSON.stringify(players))
 }
@@ -51,10 +49,9 @@ export function buildPlayersUrlHash(players) {
  */
 export function parsePlayersUrlHash(hash) {
   // Add an ampersand to make url params uniform for splitting
-  let decodedHash = '&' + decodeURIComponent(hash)
-
+  const decodedHash = '&' + decodeURIComponent(hash)
   // Get tail of array (ignoring the first split ara)
-  let urlPlayers = decodedHash.split('&player=').slice(1)
+  const urlPlayers = decodedHash.split('&player=').slice(1)
 
   return createCollection(urlPlayers.map(value => value.split('~')))
 }

@@ -78,7 +78,8 @@ export class Player {
    * @return string
    */
   toUrlParam() {
-    return encodeURIComponent(`${this.name || ''}~${this.number || ''}~${this.skill || 0}~${this.active || false}~${this.position || ''}`
+    return encodeURIComponent(
+      `${this.name || ''}~${this.number || ''}~${this.skill || 0}~${this.active || false}~${this.position || ''}`
     )
   }
 }

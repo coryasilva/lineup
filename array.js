@@ -2,7 +2,7 @@
  * Gets the lowest value from a an array of numbers
  * @param {Array} arr
  */
-export function indexOfMinValue (arr) {
+export function indexOfMinValue(arr) {
   return arr.reduce((iMin, val, i, arr) => val < arr[iMin] ? i : iMin, 0)
 }
 
@@ -26,7 +26,7 @@ export function sum(arr) {
  * Averages an array of numbers
  * @param {Array} arr
  */
-export function average(arr){
+export function average(arr) {
   return sum(arr) / arr.length
 }
 
@@ -34,9 +34,9 @@ export function average(arr){
  * Calculates variance for an array of numbers
  * @param {Array} arr
  */
-export function variance(arr){
-  var avg = average(arr)
-  var num = arr.map(value => (value - avg)**2)
+export function variance(arr) {
+  const avg = average(arr)
+  const num = arr.map(value => (value - avg) ** 2)
   return average(num)
 }
 
@@ -44,7 +44,7 @@ export function variance(arr){
  * Calculated standard deviation for an array of numbers
  * @param {Array} values
  */
-export function standardDeviation(arr){
+export function standardDeviation(arr) {
   return Math.sqrt(variance(arr))
 }
 

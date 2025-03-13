@@ -22,8 +22,8 @@ export default new Vue({
       e.preventDefault()
 
       // early return if form is invalid
-      var form = e.target
-      if ( !form.checkValidity() ) {
+      const form = e.target
+      if (!form.checkValidity()) {
         this.scrollToInvalidField(form)
         this.wasValidated = true
         return
@@ -50,7 +50,7 @@ export default new Vue({
         scrollTop: $form.find('input:invalid').offset().top - 100
       }, 750)
     },
-    modal: function (command) {
+    modal: function () {
       $('.lineup-modal').modal('show')
     },
     demo: function () {
@@ -65,7 +65,7 @@ export default new Vue({
   },
   watch: {
     players: {
-      handler: function (newValue) {
+      handler: function () {
         datastore.save(STORAGE_KEY, this.players);
       },
       deep: true

@@ -6,7 +6,7 @@ import { wrapIndex, generate, indexOfMinValue, average, variance, standardDeviat
  * @param {Player[]} players
  */
 export function sortPlayersByName(players) {
-  return players.sort((a,b) => typeof a.name === 'string' ? a.name.localeCompare(b.name) : 0)
+  return players.sort((a, b) => typeof a.name === 'string' ? a.name.localeCompare(b.name) : 0)
 }
 
 /**
@@ -15,7 +15,7 @@ export function sortPlayersByName(players) {
  * @return {Player[]}
  */
 export function sortPlayersBySkill(players) {
-  return players.sort((a,b) => b.skill - a.skill)
+  return players.sort((a, b) => b.skill - a.skill)
 }
 
 /**
@@ -24,7 +24,7 @@ export function sortPlayersBySkill(players) {
  * @return {Player[]}
  */
 export function sortPlayersByLines(players) {
-  return players.sort((a,b) => a.lines.toString() > b.lines.toString() ? -1: 1)
+  return players.sort((a, b) => a.lines.toString() > b.lines.toString() ? -1 : 1)
 }
 
 /**
@@ -83,20 +83,20 @@ export function scoreLine(line) {
  * @return {Array[]}
  */
 export function buildLines(fielderCount) {
-  var sequenceIndex = 0;
-  var players = generate(fielderCount)
-  let lines = [];
+  const players = generate(fielderCount);
+  const lines = [];
+  let sequenceIndex = 0;
   // 3 lines per period; 3 period = 9 lines
-  for (var i = 0; i < 9; i++) {
-    var line = [];
+  for (let i = 0; i < 9; i++) {
+    let line = [];
     // 5 fielders (ignore goalie position for now)
-    for (var j = 0; j < 5; j++) {
+    for (let j = 0; j < 5; j++) {
       line.push(players[wrapIndex(sequenceIndex++, players.length)])
     }
     // Sort the lowest integer first so we maximize the use of
     // the more skilled/able players and do not overwhelm
     // the less able players.
-    lines.push(line.sort((a,b)=>a>b));
+    lines.push(line.sort((a, b) => a > b));
   }
   return lines;
 }
@@ -114,19 +114,19 @@ export function determineLineup(players) {
   players.forEach(player => player.clearLines())
 
   // get active fielders and sort by skill
-  var fielders = sortPlayersBySkill( filterFielders(players) )
+  const fielders = sortPlayersBySkill(filterFielders(players))
 
   // get active goalies and sort by skill
-  var goalies = sortPlayersBySkill( filterGoalies(players) )
+  const goalies = sortPlayersBySkill(filterGoalies(players))
 
   // build the line up template (only includes fielders)
-  let lines = buildLines( fielders.length )
+  const lines = buildLines(fielders.length)
 
   // loop over periods and alternate goalies
-  for (var i = 1; i <= 3; i++) {
-    for (var g = 1; g <= 3; g++) {
-      let goalie = goalies[wrapIndex(i - 1, goalies.length)]
-      let lineIndex = i * 3 - g
+  for (let i = 1; i <= 3; i++) {
+    for (let g = 1; g <= 3; g++) {
+      const goalie = goalies[wrapIndex(i - 1, goalies.length)]
+      const lineIndex = i * 3 - g
       goalie.lines[lineIndex] = true
       lines[lineIndex].push(goalie)
     }
@@ -136,14 +136,14 @@ export function determineLineup(players) {
   let playerIndex = 0;
   while (playerIndex < fielders.length) {
     // (re)Score the lines
-    let lineScores = scoreLines(lines)
+    const lineScores = scoreLines(lines)
 
     // get the lines with the lowest score
-    let lineIndex = indexOfMinValue(lineScores);
-    let line = lines[lineIndex]
+    const lineIndex = indexOfMinValue(lineScores);
+    const line = lines[lineIndex]
 
     // Find the first open slot (array position with a number)
-    for ( let i = 0; i < line.length; i++) {
+    for (let i = 0; i < line.length; i++) {
       if (typeof line[i] === 'number') {
         var replaceIndex = line[i]
         break;
@@ -163,10 +163,10 @@ export function determineLineup(players) {
     playerIndex++
   }
 
-  let finalLineupScores = scoreLines(lines)
+  const finalLineupScores = scoreLines(lines)
 
   // Sort the fielders by line
-  let finalPlayers = sortPlayersByLines(fielders).concat(goalies)
+  const finalPlayers = sortPlayersByLines(fielders).concat(goalies)
 
   return {
     lines: lines,
@@ -179,21 +179,21 @@ export function determineLineup(players) {
 }
 
 export function demo() {
-  var demo = [];
-  demo.push(new Player('Ryan Getzlaf', '15', 86, true))
-  demo.push(new Player('Ryan Kesler', '17', 66, true))
-  demo.push(new Player('Corey Perry', '10', 94, true))
-  demo.push(new Player('John Gibson', '36', 75, true, 'Goalie'))
-  demo.push(new Player('Rickard Rakell', '67', 83, true))
-  demo.push(new Player('Andrew Cogliano', '7', 79, true))
-  demo.push(new Player('Cam Fowler', '4', 72, true))
-  demo.push(new Player('Hampus Lindholm', '47', 77, true))
-  demo.push(new Player('Kevin Bieksa', '3', 91, true))
-  demo.push(new Player('Jakob Silfverberg', '33', 88, true))
-  demo.push(new Player('Ryan Miller', '30', 85, false, 'Goalie'))
-  demo.push(new Player('Nick Ritchie', '37', 96, false))
-  demo.push(new Player('Antoine Vermette', '50', 67, true))
-  demo.push(new Player('François Beauchemin', '23', 87, true))
-  demo.push(new Player('Ondřej Kaše', '25', 74, true))
-  return demo;
+  return [
+    new Player('Ryan Getzlaf', '15', 86, true),
+    new Player('Ryan Kesler', '17', 66, true),
+    new Player('Corey Perry', '10', 94, true),
+    new Player('John Gibson', '36', 75, true, 'Goalie'),
+    new Player('Rickard Rakell', '67', 83, true),
+    new Player('Andrew Cogliano', '7', 79, true),
+    new Player('Cam Fowler', '4', 72, true),
+    new Player('Hampus Lindholm', '47', 77, true),
+    new Player('Kevin Bieksa', '3', 91, true),
+    new Player('Jakob Silfverberg', '33', 88, true),
+    new Player('Ryan Miller', '30', 85, false, 'Goalie'),
+    new Player('Nick Ritchie', '37', 96, false),
+    new Player('Antoine Vermette', '50', 67, true),
+    new Player('François Beauchemin', '23', 87, true),
+    new Player('Ondřej Kaše', '25', 74, true),
+  ]
 }
