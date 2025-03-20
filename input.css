@@ -3,5 +3,5 @@
 /* npx @tailwindcss/cli -i input.css -o output.css --watch */
 
 ::selection {
-  @apply text-white bg-yellow-600;
+  @apply text-black bg-yellow-500;
 }

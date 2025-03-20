@@ -3,6 +3,7 @@ import { Player } from "./player.js";
 
 // TODO: Validate lineup
 // TODO: Revamp algo ()
+// TODO: Bundle & minify JS
 
 export class ViewModel {
   /**
@@ -204,7 +205,7 @@ export class ViewModel {
               "aria-label": player.active ? "Active" : "Inactive",
               class: [
                 "inline-flex w-2.5 h-2.5 rounded-full me-1.5 shrink-0",
-                player.active ? "bg-indigo-500" : "bg-gray-700",
+                player.active ? "bg-blue-500" : "bg-gray-700",
               ],
             }),
             player.name,
@@ -234,7 +235,7 @@ export class ViewModel {
                 "data-action": "update",
                 "data-player-id": player.id,
                 class:
-                  "text-sm font-medium text-indigo-400 hover:text-indigo-300 cursor-pointer px-2 py-1 transition-colors",
+                  "text-sm font-medium text-blue-400 hover:text-blue-300 cursor-pointer px-2 py-1 transition-colors",
               },
               "Edit",
             ),
