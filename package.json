@@ -6,10 +6,10 @@
   "type": "module",
   "scripts": {
     "dev": "npm-run-all --parallel dev:* --race",
-    "dev:css": "npx @tailwindcss/cli -i input.css -o output.css --watch",
+    "dev:css": "npx @tailwindcss/cli -i input.css -o output.css --watch --minify",
     "dev:test": "npx ava --watch",
     "build": "npm-run-all --sequential lint --parallel build:*",
-    "build:css": "npx @tailwindcss/cli -i input.css -o output.css",
+    "build:css": "npx @tailwindcss/cli -i input.css -o output.css --minify",
     "build:test": "npx ava",
     "lint": "npx @biomejs/biome check ."
   },
