@@ -258,7 +258,7 @@ export class Model {
       { id: "18rsy5c", name: "Nick Ritchie", number: "37", skill: 96, active: false },
       { id: "18rsyx4", name: "Antoine Vermette", number: "50", skill: 67, active: true },
       { id: "18rszow", name: "François Beauchemin", number: "23", skill: 87, active: true },
-      { id: "18rt0go", name: "Ondřej Kaše", number: "25", skill: 74, active: true },
+      { id: "18rt0go", name: "Ondřej Kaše", number: "25", skill: 74, active: false },
     ].map((p) => new Player(p));
 
     this.#players = new Map(demoPlayers.map((p) => [p.id, p]));

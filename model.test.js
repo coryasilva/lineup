@@ -1,45 +1,8 @@
-import test from 'ava';
-import * as helpers from "./helpers.js";
+import "jsdom-global/register.js";
+import test from "ava";
 import { Model } from "./model.js";
-import { Player } from "./player.js";
 
-test("helpers.js", (t) => {
-  t.is(helpers.minimumIndex([3.332, 0.11, 1]), 1, "Finds minimum index");
-  t.is(helpers.generateArray(3).join(), "0,1,2", "Generate array with index as value");
-  t.is(helpers.sum([1, 2, 3]), 6, "Sums array");
-  t.is(helpers.average([1, 2, 3]), 2, "Averages array");
-  t.is(helpers.variance([1, 2, 3, 4, 5]), 2, "Calculates variance of an array");
-  t.is(helpers.standardDeviation([1, 2, 3, 4, 5]), Math.SQRT2, "Calculates standard deviation of an array");
-  t.is(helpers.wrapIndex(0, 4), 0, "Wraps out of bounds index of array, no cycles");
-  t.is(helpers.wrapIndex(4, 4), 0, "Wraps out of bounds index of array, 1 cycle");
-  t.is(helpers.wrapIndex(9, 4), 1, "Wraps out of bounds index of array, 2 cycles");
-});
-
-test("player.js", (t) => {
-  const p1 = new Player({ id: "1", name: "Test 1", number: "01", skill: 25, active: true, position: "G" });
-  t.is(p1.name, "Test 1", "Player constructs with name");
-  t.is(p1.number, "01", "Player constructs with number");
-  t.is(p1.skill, 25, "Player constructs with skill");
-  t.is(p1.position, "G", "Player constructs with position");
-  t.is(p1.active, true, "Player constructs with active");
-
-  const p2 = new Player({ id: "2", name: "Test2", number: "02", skill: 15, active: false });
-  t.true(p1.isGoalie(), "Check if goalie, true");
-  t.false(p2.isGoalie(), "Check if goalie, false");
-
-  const p3 = new Player({ id: "3", name: "Test3", number: "03", skill: 5 });
-  t.is(p3.toString("~"), "Test3~03~5~~0", "Converts Player values to delimited string");
-
-  const p4 = Player.fromString("4~Test 4~09~75~G~1", "~");
-  t.true(p4 instanceof Player, "Builds Player from delimited string");
-  t.is(p4.name, "Test 4", "Sets Player.name from delimited string");
-  t.is(p4.number, "09", "Sets Player.number from delimited string");
-  t.is(p4.skill, 75, "Sets Player.skill from delimited string");
-  t.is(p4.position, "G", "Sets Player.position from delimited string");
-  t.is(p4.active, true, "Sets Player.active from delimited string");
-});
-
-test("view-model.js", (t) => {
+test("Model", (t) => {
   const mockWindow = {
     history: { replaceState: () => {} },
     addEventListener: () => {},
@@ -52,12 +15,7 @@ test("view-model.js", (t) => {
   console.log(model.players);
 });
 
-(function run() {
-  // test('main.js', t => {
-  //   t.true(main._isVue, 'Vue loads')
-  //   t.true(main._isMounted, 'Vue mounts')
-  // })
-  // test('datastore.js', t => {
+// test('datastore.js', t => {
   //   const playersHash = 'p=C%20c~01~20~~1&p=B%20b~02~30~G~1&p=A%20a~03~10~~1&p=D%20d~04~5~~0'
   //   const players = [
   //     new player.Player({ name: 'C c', number: '01', skill: 20, active: true }),
@@ -109,4 +67,3 @@ test("view-model.js", (t) => {
   //   t.is(demoLineup.sd, 10.829771494232183, 'Calculates the standard deviation of a lineup')
   //   t.is(demoLineup.var, 117.28395061728399, 'Calculates the variance of a lineup')
   // })
-})();
