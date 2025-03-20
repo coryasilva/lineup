@@ -1,218 +1,157 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="antialiased scroll-smooth">
   <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="Special Olympics floor hockey lineup generator">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-    <style>
-      /* VueJS */
-      [v-cloak] {
-          display: none;
-      }
-
-      /* Bootstrap Overrides */
-      @media (min-width: 576px) {
-          .modal-dialog {
-              max-width: 92%;
-          }
-      }
-      @media (min-width: 992px) {
-          .modal-lg {
-              max-width: 800px;
-          }
-      }
-
-      /* Application Styles */
-      .players thead th {
-          border-top: none;
-      }
-
-      .lineup {
-          border: none;
-      }
-      .lineup td, .lineup th, .lineup thead th {
-          border-color: #bbb;
-      }
-      .lineup td.crossed {
-          background-image: linear-gradient(to bottom left,  transparent calc(50% - 2px), #000, transparent calc(50% + 2px));
-      }
-      .lineup thead > tr:first-child th {
-          border-bottom-width: 1px;
-      }
-      .lineup thead > tr:first-child th:first-child {
-          border-left: none;
-          border-top: none;
-      }
-    </style>
-    <title>Lineup!</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>🥇Lineup!</title>
+    <link href="./output.css" rel="stylesheet">
   </head>
-  <body>
-    <div id="app" class="container-fluid" style="max-width:1024px">
+  <body class="bg-black px-6 text-gray-200 has-[dialog[open]]:overflow-hidden has-[dialog[open]]:h-screen">
+    <main id="app" class="container mx-auto max-w-2xl pb-8">
 
-      <!-- Title and Instructions -->
-      <h1 class="display-4 mt-4">Lineup!</h1>
-      <p class="lead">
-          First, add your players marking who is active and then click "Build Lineup".
-      </p>
+      <header class="pt-8">
+        <div class="flex gap-2 justify-between items-baseline">
+          <h1 class="text-3xl text-semibold">🥇Lineup</h1>
+          <button id="share-button" type="button" class="font-semibold text-gray-200 hover:text-white cursor-pointer px-2 py-1 transition-all duration-1000">Share</button>
+        </div>
+        <p class="text-gray-400 text-sm mt-0.5">
+          Build winning floor hockey lineups for equal participation in <a href="https://resources.specialolympics.org/sports-essentials/sports-and-coaching/floor-hockey" target="_blank" class="underline">Special Olympics</a>.
+        </p>
+      </header>
+        
+      <section id="roster" class="py-8">
+        <div class="flex justify-between items-center">
+          <div class="flex flex-col">
+            <h2 class="text-2xl font-semibold">Roster</h2>
+            <p id="roster-summary" class="text-sm text-gray-400"></p>
+          </div>
+          <button id="lineup-build-button" type="button" class="h-12 rounded-lg bg-indigo-500 py-2 px-4 font-semibold text-white hover:bg-indigo-400 cursor-pointer text-sm transition-colors">
+            Build lineup
+          </button>
+        </div>
 
-      <form @submit="buildLineup" v-bind:class="{'was-validated': wasValidated}" novalidate="true">
+        <div id="roster-empty" class="text-gray-400 mt-6 mb-2 italic">
+          Click the “Add player” button to start building your roster or try the
+          <button id="demo-button" class="inline font-bold underline text-gray-400 hover:text-gray-300 cursor-pointer">
+            demo
+          </button>
+          roster. When your roster is complete (minimum 6 players), then click the “Build lineup” button.
+        </div>
 
-      <!-- Controls -->
-      <button type="button" class="btn btn-outline-primary mb-3" @click="addPlayer">Add Player</button>
-      <button type="submit" class="btn btn-outline-success mb-3">Build Lineup</button>
-      <button type="button" class="btn btn-outline-secondary mb-3" @click="demo">Demo</button>
-      <!-- Players -->
+        <div role="list" class="mt-2"></div>
 
-      <table v-cloak class="table table-responsive-md players">
-        <caption>
-          <small class="text-muted font-italic">Team roster: {{activePlayersCount}} active, {{players.length}} total</small>
-        </caption>
-        <thead>
-          <tr>
-            <th style="width:36px">Active</th>
-            <th>Name</th>
-            <th>Number</th>
-            <th>Position</th>
-            <th>Skill</th>
-            <th>Delete</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="(player, index) in players">
-            <td>
-              <button class="btn btn-sm"
-                type="button"
-                v-bind:class="{'btn-primary': player.active, 'btn-outline-secondary': !player.active}"
-                @click="player.active = !player.active">
-                &nbsp;{{player.active ? 'Yes' : 'No'}}&nbsp;
-              </button>
-            </td>
-            <td>
-              <input class="form-control form-control-sm"
-                style="min-width:150px"
-                aria-label="name"
-                type="text"
-                placeholder="full name"
-                pattern="[^~]*"
-                v-model.lazy.trim="player.name"
-                required>
-                <div class="invalid-feedback">Please enter a name. ("~" not allowed)</div>
-            </td>
-            <td>
-              <input class="form-control form-control-sm"
-                style="min-width:72px"
-                aria-label="number"
-                type="text"
-                pattern="[0-9]*"
-                maxlength="2"
-                placeholder="jersey"
-                v-model.lazy.trim="player.number"
-                required>
-                <div class="invalid-feedback">Please enter a jersey number. (</div>
-            </td>
-            <td>
-              <select class="form-control form-control-sm"
-                style="min-width:96px"
-                aria-label="position"
-                v-model="player.position">
-                <option v-if="player.position !== undefined" :value="undefined">Select an option</option>
-                <option value="Goalie">Goalie</option>
-                <option value="Defenseman">Defense</option>
-                <option value="Center">Center</option>
-                <option value="Wing">Wing</option>
-              </select>
-            </td>
-            <td>
-              <input class="form-control form-control-sm"
-                style="min-width:72px"
-                aria-label="skill"
-                type="number"
-                step="1"
-                min="0"
-                max="100"
-                placeholder="number"
-                v-model.lazy.trim="player.skill"
-                required>
-                <div class="invalid-feedback">Please enter a skill level.</div>
-            </td>
-            <td>
-              <button class="btn btn-outline-danger btn-sm" type="button" @click="deletePlayer(index)">&nbsp;X&nbsp;</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      </form>
+        <div class="py-5 flex flex-col items-center justify-center">
+          <button id="player-add-button" type="button" class="h-12 border border-dashed rounded-lg border-indigo-400 p-2 w-full font-semibold text-indigo-400 hover:text-indigo-300 hover:border-indigo-300 hover:bg-indigo-400/10 cursor-pointer text-sm transition-colors">
+            Add player
+          </button>
+        </div>
+      </section>
 
-      <!-- Lineup Modal -->
-      <div class="modal fade lineup-modal" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title">The Lineup</h5>
-              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-              </button>
-            </div>
-            <div class="modal-body">
-              <table class="table table-bordered table-sm lineup table-responsive-md">
-                <thead>
-                  <tr>
-                    <th colspan="4"></th>
-                    <th colspan="3" class="text-center">Period 1</th>
-                    <th colspan="3" class="text-center">Period 2</th>
-                    <th colspan="3" class="text-center">Period 3</th>
-                  </tr>
-                  <tr>
-                    <th width="32px" class="text-right">#</th>
-                    <th style="min-width:150px">Name</th>
-                    <th width="48px">No.</th>
-                    <th width="108px">Position</th>
-                    <th class="text-center" width="42px">1</th>
-                    <th class="text-center" width="42px">2</th>
-                    <th class="text-center" width="42px">3</th>
-                    <th class="text-center" width="42px">4</th>
-                    <th class="text-center" width="42px">5</th>
-                    <th class="text-center" width="42px">6</th>
-                    <th class="text-center" width="42px">7</th>
-                    <th class="text-center" width="42px">8</th>
-                    <th class="text-center" width="42px">9</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="(player, index) in lineup.players">
-                    <th class="text-right">{{index + 1}}</th>
-                    <td class="text-nowrap">{{player.name}}</td>
-                    <td>{{player.number}}</td>
-                    <td class="font-italic">{{player.position}}</td>
-                    <td v-for="line in player.lines" v-bind:class="{crossed: line}"></td>
-                  </tr>
-                </tbody>
-              </table>
-              <dl class="row text-muted">
-                <dt class="col-6 col-sm-4 col-md-3">Standard Deviation</dt>
-                <dd class="col-6 col-sm-8 col-md-9">{{lineup.sd}}</dd>
-                <dt class="col-6 col-sm-4 col-md-3">Variance</dt>
-                <dd class="col-6 col-sm-8 col-md-9">{{lineup.var}}</dd>
-                <dt class="col-6 col-sm-4 col-md-3">Mean</dt>
-                <dd class="col-6 col-sm-8 col-md-9">{{lineup.mean}}</dd>
-                <dt class="col-6 col-sm-4 col-md-3">Line Scores</dt>
-                <dd class="col-6 col-sm-8 col-md-9">{{lineup.scores}}</dd>
-              </dl>
-            </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-outline-primary" data-dismiss="modal">Ok</button>
-            </div>
+      <dialog id="player-dialog" class="transition-discrete first-line:focus-visible:outline-none fixed m-0 z-50 overflow-auto bg-transparent w-full max-w-full h-full max-h-full backdrop:bg-indigo-200/30 backdrop:backdrop-filter backdrop:backdrop-blur transition-all opacity-0 duration-300 ease-in-out backdrop:transition-opacity backdrop:opacity-0 backdrop:ease-in-out starting:open:opacity-0 starting:open:backdrop:opacity-0 open:block open:opacity-100 open-duration-300 open:ease-in-out open:backdrop:opacity-100 open:backdrop:duration-300 open:backdrop:ease-in-out">
+        <div class="fixed inset-0 flex justify-center p-5 mx-auto overflow-auto items-center" data-modal-backdrop="true">
+          <div class="flex min-h-full items-center justify-center w-full mt-auto" data-modal-backdrop="true">
+            <section class="relative mx-auto px-5 py-8 sm:p-10 rounded-xl bg-black drop-shadow-xl min-w-80 md:min-w-96 max-w-2xl">
+              <h2 class="text-2xl font-semibold text-gray-200"></h2>
+              <form class="mt-6 grid grid-cols-12 gap-4" name="player" method="dialog" autocomplete="off">
+                <input type="hidden" name="id" />
+                
+                <div class="col-span-9 flex flex-col gap-1">
+                  <label for="name" class="block text-sm font-medium text-gray-200">Name</label>
+                  <input type="text" name="name" id="name" required="" minlength="1" maxlength="100" pattern="[^~]*" class="block w-full rounded-md bg-gray-900 px-3 py-1.5 text-base text-gray-200 outline-1 -outline-offset-1 outline-gray-700 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-400" />
+                </div>
+          
+                <div class="col-span-3 flex flex-col gap-1">
+                  <label for="number" class="block text-sm font-medium text-gray-200">Number</label>
+                  <input type="text" name="number" id="number" required="" minlength="1" maxlength="3" pattern="\d{1,3}" class="block w-full rounded-md bg-gray-900 px-3 py-1.5 text-base text-gray-200 outline-1 -outline-offset-1 outline-gray-700 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-400" />
+                </div>
+              
+                <div class="col-span-4 flex flex-col gap-1">
+                  <label for="skill" class="block text-sm font-medium text-gray-200">Skill</label>
+                  <input type="text" name="skill" id="skill" required="" minlength="1" maxlength="3" pattern="(100|\d\d?)" class="block w-full rounded-md bg-gray-900 px-3 py-1.5 text-base text-gray-200 outline-1 -outline-offset-1 outline-gray-700 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-400" />
+                </div>
+        
+                <div class="col-span-5 flex flex-col gap-1">
+                  <label for="position" class="block text-sm font-medium text-gray-200">Position</label>
+                  <select name="position" id="position" class="block w-full min-h-9 rounded-md bg-gray-900 px-3 py-1.5 text-base text-gray-200 outline-1 -outline-offset-1 outline-gray-700 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-400 cursor-pointer leading-loose">
+                    <option value="">--</option>
+                    <option value="G">Goalie</option>
+                    <option value="F">Fielder</option>
+                  </select>
+                </div>
+          
+                <div class="col-span-3 flex flex-col gap-3">
+                  <label for="active" class="block text-sm font-medium text-gray-200">Active</label>
+                  <input type="checkbox" name="active" id="active" class="appearance-none cursor-pointer border rounded h-5 w-5 transition border-gray-700 accent-indigo-500 text-indigo-500 focus:outline-0 focus-visible:outline-2 checked:bg-current checked:border-current bg-gray-900" />
+                </div>
+
+                <div class="col-span-12 mt-4 flex gap-4 justify-end">
+                  <button type="button" class="rounded-lg text-indigo-400 py-2 px-4 font-semibold hover:text-indigo-300 cursor-pointer text-sm transition-colors" data-action="close">Cancel</button>
+                  <button type="submit" class="rounded-lg bg-indigo-500 py-2 px-4 font-semibold text-white hover:bg-indigo-400 cursor-pointer text-sm transition-colors">Save</button>
+                </div>
+              </form>
+            </section>
           </div>
         </div>
-      </div><!-- end Lineup Modal -->
-    </div><!-- end Container -->
+      </dialog>
 
-    <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
-    <script src="main.js" type="module"></script>
-    <script src="test.js" type="module"></script>
+      <dialog id="player-delete-dialog" class="transition-discrete first-line:focus-visible:outline-none fixed m-0 z-50 overflow-auto bg-transparent w-full max-w-full h-full max-h-full backdrop:bg-indigo-200/30 backdrop:backdrop-filter backdrop:backdrop-blur transition-all opacity-0 duration-300 ease-in-out backdrop:transition-opacity backdrop:opacity-0 backdrop:ease-in-out starting:open:opacity-0 starting:open:backdrop:opacity-0 open:block open:opacity-100 open-duration-300 open:ease-in-out open:backdrop:opacity-100 open:backdrop:duration-300 open:backdrop:ease-in-out">
+        <div class="fixed inset-0 flex justify-center p-5 mx-auto overflow-auto items-center" data-modal-backdrop="true">
+          <div class="flex min-h-full items-center justify-center w-full mt-auto" data-modal-backdrop="true">
+            <section class="relative mx-auto px-5 py-8 sm:p-10 rounded-xl bg-black drop-shadow-xl min-w-80 md:min-w-96 max-w-2xl">
+              <h2 class="text-2xl font-semibold text-gray-200">Delete player <small class="text-xs text-gray-600 font-normal ml-2">id: 123</small></h2>
+              <p class="text-gray-200 mt-6">Are you sure you want to delete <strong>Cory Silva</strong>?</p>
+              <form class="col-span-12 mt-4 flex gap-4 justify-end" name="player-delete" method="dialog" autocomplete="off">
+                <input type="hidden" name="id" />
+                <button type="button" class="rounded-lg text-indigo-400 py-2 px-4 font-semibold hover:text-indigo-300 cursor-pointer text-sm transition-colors" data-action="close">Cancel</button>
+                <button type="submit" class="rounded-lg bg-red-500 py-2 px-4 font-semibold text-white hover:bg-red-400 cursor-pointer text-sm transition-colors">Delete</button>
+              </form>
+            </section>
+          </div>
+        </div>
+      </dialog>
 
+      <dialog id="lineup-dialog" class="transition-discrete first-line:focus-visible:outline-none fixed m-0 z-50 overflow-auto bg-transparent w-full max-w-full h-full max-h-full backdrop:bg-indigo-200/30 backdrop:backdrop-filter backdrop:backdrop-blur transition-all opacity-0 duration-300 ease-in-out backdrop:transition-opacity backdrop:opacity-0 backdrop:ease-in-out starting:open:opacity-0 starting:open:backdrop:opacity-0 open:block open:opacity-100 open-duration-300 open:ease-in-out open:backdrop:opacity-100 open:backdrop:duration-300 open:backdrop:ease-in-out">
+        <div class="fixed inset-0 flex justify-center p-5 mx-auto overflow-auto items-center" data-modal-backdrop="true">
+          <div class="flex min-h-full items-center justify-center w-full mt-auto" data-modal-backdrop="true">
+            <section class="relative mx-auto px-5 py-8 sm:p-10 rounded-xl bg-black drop-shadow-xl min-w-80 md:min-w-96 max-w-2xl">
+              <h2 class="text-2xl font-semibold text-gray-200">Lineup</h2>
+              <div class="overflow-x-scroll mt-2">
+                <table id="lineup-table" lass="table-fixed">
+                  <thead class="text-sm text-gray-200 text-center">
+                    <tr>
+                      <th colspan="3"></th>
+                      <th scope="col" colspan="3" class="pb-2 px-2 border-x border-gray-800">Period 1</th>
+                      <th scope="col" colspan="3" class="pb-2 px-2 border-x border-gray-800">Period 2</th>
+                      <th scope="col" colspan="3" class="pb-2 px-2 border-x border-gray-800">Period 3</th>
+                    </tr>
+                    <tr>
+                      <th scope="col" class="pb-2 px-2 text-left border-b border-gray-800">Name</th>
+                      <th scope="col" class="pb-2 px-2 text-left w-8 max-w-8 border-b border-gray-800">#</th>
+                      <th scope="col" class="pb-2 px-2 border-b border-gray-800">Pos</th>
+                      <th scope="col" class="pb-2 px-2 border-b border-x border-gray-800">1</th>
+                      <th scope="col" class="pb-2 px-2 border-b border-x border-gray-800">2</th>
+                      <th scope="col" class="pb-2 px-2 border-b border-x border-gray-800">3</th>
+                      <th scope="col" class="pb-2 px-2 border-b border-x border-gray-800">4</th>
+                      <th scope="col" class="pb-2 px-2 border-b border-x border-gray-800">5</th>
+                      <th scope="col" class="pb-2 px-2 border-b border-x border-gray-800">6</th>
+                      <th scope="col" class="pb-2 px-2 border-b border-x border-gray-800">7</th>
+                      <th scope="col" class="pb-2 px-2 border-b border-x border-gray-800">8</th>
+                      <th scope="col" class="pb-2 px-2 border-b border-x border-gray-800">9</th>
+                    </tr>
+                  </thead>
+                  <tbody class="font-medium text-sm text-gray-200 text-nowrap"></tbody>
+                  <tfoot class="text-sm text-gray-600"></tfoot>
+                </table>
+              </div>
+              <div class="mt-6 flex gap-4 justify-end">
+                <button type="button" class="rounded-lg bg-indigo-500 py-2 px-8 font-semibold text-white hover:bg-indigo-400 cursor-pointer text-sm transition-colors" data-action="close">Close</button>
+              </div>
+            </section>
+          </div>
+        </div>
+      </dialog>
+
+    </main>
+    <script src="app.js" type="module"></script>
   </body>
 </html>

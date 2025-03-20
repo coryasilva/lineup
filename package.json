@@ -1,0 +1,25 @@
+{
+  "name": "lineup",
+  "version": "1.0.0",
+  "description": "Build winning floor hockey lineups for equal participation in Special Olympics.",
+  "main": "index.html",
+  "type": "module",
+  "scripts": {
+    "dev": "npm-run-all --parallel dev:* --race",
+    "dev:css": "npx @tailwindcss/cli -i input.css -o output.css --watch",
+    "dev:test": "npx ava --watch",
+    "build": "npm-run-all --sequential lint --parallel build:*",
+    "build:css": "npx @tailwindcss/cli -i input.css -o output.css",
+    "build:test": "npx ava",
+    "lint": "npx @biomejs/biome check ."
+  },
+  "author": "Cory Silva",
+  "license": "ISC",
+  "devDependencies": {
+    "@biomejs/biome": "1.9.4",
+    "@tailwindcss/cli": "^4.0.14",
+    "ava": "^6.2.0",
+    "npm-run-all": "^4.1.5",
+    "tailwindcss": "^4.0.14"
+  }
+}

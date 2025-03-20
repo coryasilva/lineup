@@ -1,45 +1,40 @@
 /**
- * Creates a collection of players from an array of POJOs
- * @param {Array} arr
- * @return {Player[]}
+ * @typedef {typeof PlayerPosition[keyof typeof PlayerPosition]} PlayerPosition
+ * @readonly
  */
-export function createCollection(arr) {
-  return arr.map(player => create(player))
-}
+export const PlayerPosition = Object.freeze({
+  GOALIE: "G",
+  FIELDER: "F",
+});
 
 /**
- * Creates a new Player from an object or and Array
- * @param {object|Array} obj
- * @return {Player}
+ * @typedef {Object} TPlayer
+ * @property {string} id
+ * @property {string} name
+ * @property {string} number
+ * @property {number} [skill]
+ * @property {boolean} [active]
+ * @property {PlayerPosition | string} [position]
  */
-export function create(obj) {
-  if (Array.isArray(obj)) {
-    obj.length = 5;
-    return new Player(obj[0], obj[1], obj[2], obj[3], obj[4])
-  }
-  return new Player().populate(obj)
-}
 
-/**
- * Class representing a Player
- */
 export class Player {
   /**
-   * Creates a player
-   * @param {string} name
-   * @param {string} number
-   * @param {number} skill
-   * @param {boolean} [active]
-   * @param {string} [position]
+   * @param {TPlayer} [player]
    */
-  constructor(name, number, skill, active, position) {
-    this.name = name
-    this.number = number
-    this.skill = parseInt(skill)
-    this.active = active == false || active == 'false' ? false : true
-    this.position = position || undefined
-    this.clearLines()
-    return this
+  constructor(player) {
+    this.id = player.id;
+    this.name = player?.name ?? "";
+    this.number = player?.number ?? "";
+    this.skill = Number.isInteger(player?.skill) ? player.skill : 50;
+    if (this.skill < 0) this.skill = 0;
+    if (this.skill > 100) this.skill = 100;
+    this.active = !!player?.active;
+    this.position = Object.values(PlayerPosition)
+      .map((p) => p.toString())
+      .includes(player?.position?.toUpperCase())
+      ? player.position.toUpperCase()
+      : PlayerPosition.FIELDER;
+    this.clearLines();
   }
 
   /**
@@ -47,39 +42,39 @@ export class Player {
    * @return boolean
    */
   isGoalie() {
-    return this.position === "Goalie"
+    return this.position === "G";
   }
 
   /**
+   * TODO: Does this belong here?
    * Clears the lines
    * @return Array
    */
   clearLines() {
-    this.lines = Array(9).fill(false)
+    this.lines = Array(9).fill(false);
     return this.lines;
   }
 
-  /**
-   * Populate the class form a POJO
-   * @param {object} obj
-   */
-  populate(obj) {
-    this.name = obj.name
-    this.number = obj.number
-    this.skill = parseInt(obj.skill)
-    this.active = obj.active == false || obj.active == 'false' ? false : true
-    this.position = obj.position || undefined
-    this.clearLines()
-    return this
+  toString(delim = ",") {
+    return [
+      this.id ?? "",
+      this.name ?? "",
+      this.number ?? "",
+      this.skill ?? "",
+      this.position ?? "",
+      this.active ? "1" : "0",
+    ].join(delim);
   }
 
-  /**
-   * Builds a URL safe, pipe delimited list of class values
-   * @return string
-   */
-  toUrlParam() {
-    return encodeURIComponent(
-      `${this.name || ''}~${this.number || ''}~${this.skill || 0}~${this.active || false}~${this.position || ''}`
-    )
+  static fromString(str, delim = ",") {
+    const [id, name, number, skill, position, active] = str.split(delim);
+    return new Player({
+      id,
+      name,
+      number,
+      skill: Number.parseInt(skill, 10),
+      position,
+      active: active === "1",
+    });
   }
 }

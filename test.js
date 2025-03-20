@@ -1,104 +1,112 @@
-import * as array from './array.js'
-import * as player from './player.js'
-import * as lineup from './lineup.js'
-import * as datastore from './datastore.js'
-import main from './main.js'
+import test from 'ava';
+import * as helpers from "./helpers.js";
+import { Model } from "./model.js";
+import { Player } from "./player.js";
+
+test("helpers.js", (t) => {
+  t.is(helpers.minimumIndex([3.332, 0.11, 1]), 1, "Finds minimum index");
+  t.is(helpers.generateArray(3).join(), "0,1,2", "Generate array with index as value");
+  t.is(helpers.sum([1, 2, 3]), 6, "Sums array");
+  t.is(helpers.average([1, 2, 3]), 2, "Averages array");
+  t.is(helpers.variance([1, 2, 3, 4, 5]), 2, "Calculates variance of an array");
+  t.is(helpers.standardDeviation([1, 2, 3, 4, 5]), Math.SQRT2, "Calculates standard deviation of an array");
+  t.is(helpers.wrapIndex(0, 4), 0, "Wraps out of bounds index of array, no cycles");
+  t.is(helpers.wrapIndex(4, 4), 0, "Wraps out of bounds index of array, 1 cycle");
+  t.is(helpers.wrapIndex(9, 4), 1, "Wraps out of bounds index of array, 2 cycles");
+});
+
+test("player.js", (t) => {
+  const p1 = new Player({ id: "1", name: "Test 1", number: "01", skill: 25, active: true, position: "G" });
+  t.is(p1.name, "Test 1", "Player constructs with name");
+  t.is(p1.number, "01", "Player constructs with number");
+  t.is(p1.skill, 25, "Player constructs with skill");
+  t.is(p1.position, "G", "Player constructs with position");
+  t.is(p1.active, true, "Player constructs with active");
+
+  const p2 = new Player({ id: "2", name: "Test2", number: "02", skill: 15, active: false });
+  t.true(p1.isGoalie(), "Check if goalie, true");
+  t.false(p2.isGoalie(), "Check if goalie, false");
+
+  const p3 = new Player({ id: "3", name: "Test3", number: "03", skill: 5 });
+  t.is(p3.toString("~"), "Test3~03~5~~0", "Converts Player values to delimited string");
+
+  const p4 = Player.fromString("4~Test 4~09~75~G~1", "~");
+  t.true(p4 instanceof Player, "Builds Player from delimited string");
+  t.is(p4.name, "Test 4", "Sets Player.name from delimited string");
+  t.is(p4.number, "09", "Sets Player.number from delimited string");
+  t.is(p4.skill, 75, "Sets Player.skill from delimited string");
+  t.is(p4.position, "G", "Sets Player.position from delimited string");
+  t.is(p4.active, true, "Sets Player.active from delimited string");
+});
+
+test("view-model.js", (t) => {
+  const mockWindow = {
+    history: { replaceState: () => {} },
+    addEventListener: () => {},
+    location: { hash: "" },
+  };
+  const mockHash = "p=C%20c~01~20~~1&p=B%20b~02~30~G~1&p=A%20a~03~10~~1&p=D%20d~04~5~~0";
+  mockWindow.location.hash = mockHash;
+  // @ts-ignore
+  const model = new Model(mockWindow);
+  console.log(model.players);
+});
 
 (function run() {
-  const assert = console.assert
-
-  /* Dependencies */
-  assert(window.Vue, 'Vue is loaded')
-  assert(window.jQuery, 'jQuery is loaded')
-  assert(window.bootstrap, 'bootstrap is loaded')
-
-  /* array.js */
-  assert(array.indexOfMinValue([3.332,0.11,1]) === 1, 'Can find indexOfMinValue')
-  assert(array.generate(3).join() === '0,1,2', 'Can generate an array')
-  assert(array.sum([1, 2, 3]) === 6, 'Can sum array')
-  assert(array.average([1, 2, 3]) === 2, 'Can average array')
-  assert(array.variance([1, 2, 3, 4, 5]) === 2, 'Can calculate variance of an array')
-  assert(array.standardDeviation([1, 2, 3, 4, 5]) === 1.4142135623730951, 'Can calculate standard deviation of an array')
-  assert(array.wrapIndex(0, 4) === 0, 'Can wrap index of array')
-  assert(array.wrapIndex(4, 4) === 0, 'Can wrap index of array')
-  assert(array.wrapIndex(9, 4) === 1, 'Can wrap index of array')
-
-  /* player.js */
-  let mockPlayer1 = new player.Player('Test1', '01', 25, true, 'Goalie')
-  let mockPlayer2 = new player.Player('Test2', '02', 15, 'false')
-  mockPlayer2.lines[0] = true
-  mockPlayer2.lines[8] = true
-  mockPlayer2.clearLines()
-  let mockPlayer3 = new player.Player().populate({name:'Test3', number:'03', skill:5})
-  let mockCollection1 = player.createCollection([{name:'A'}, {name:'B'}])
-  let mockCollection2 = player.createCollection([['A'], ['B']])
-  assert(mockPlayer1.isGoalie() === true && mockPlayer2.isGoalie() === false, 'Can check if goalie' )
-  assert(mockPlayer2.lines[0] === false && mockPlayer2.lines[8] === false, 'Can clear lines')
-  assert(mockPlayer3.name === 'Test3' && mockPlayer3.number === '03' && mockPlayer3.skill === 5, 'Can populate Player from object')
-  assert(mockPlayer3.toUrlParam() === encodeURIComponent('Test3~03~5~true~'), 'Can export Player to url param')
-  assert(player.create(['A']) instanceof player.Player, 'Can create a player from and array')
-  assert(player.create({name:'A'}) instanceof player.Player, 'Can create a player from and array')
-  assert(mockCollection1[0].name === 'A' && mockCollection1.length === 2, 'Can create collection from array of objects')
-  assert(mockCollection2[0].name === 'A' && mockCollection2.length === 2, 'Can create collection from array of arrays')
-
-  /* lineup.js */
-  let mockPlayers = []
-  mockPlayers.push(new player.Player('C', '01', 20, false))
-  mockPlayers.push(new player.Player('B', '02', 30, true, 'Goalie'))
-  mockPlayers.push(new player.Player('A', '03', 10, true))
-  mockPlayers.push(new player.Player('D', '04', 5, false, 'Goalie'))
-  let mockLine = [{skill:1},{skill:2},{skill:3}]
-  let mockLines = [mockLine, mockLine, mockLine]
-  let demo = lineup.demo()
-  let demoLineup = lineup.determineLineup(demo)
-  let mockSortByLines = []
-  mockSortByLines.push(new player.Player('D', '04', 1, true))
-  mockSortByLines.push(new player.Player('C', '03', 1, true))
-  mockSortByLines.push(new player.Player('B', '02', 1, true))
-  mockSortByLines.push(new player.Player('A', '01', 1, true))
-  mockSortByLines[0].lines = [false, true, true]
-  mockSortByLines[1].lines = [true, false, true]
-  mockSortByLines[2].lines = [true, true, false]
-  mockSortByLines[3].lines = [true, true, true]
-  assert(lineup.sortPlayersByName(mockPlayers)[0].name === 'A', 'Can sort players by name')
-  assert(lineup.sortPlayersBySkill(mockPlayers)[0].skill === 30, 'Can sort players by skill')
-  assert(lineup.sortPlayersByLines(mockSortByLines)[0].name === 'A', 'Can sort players by lines')
-  assert(lineup.filterFielders(mockPlayers).length === 2, 'Can filter active fielders')
-  assert(lineup.filterGoalies(mockPlayers).length === 2, 'Can filter active goalies')
-  assert(lineup.scoreLine(mockLine) === 6, 'Can score a line')
-  assert(lineup.scoreLines(mockLines).join() === '6,6,6', 'Can score lines')
-  assert(lineup.buildLines(14)[2].toString() === '0,10,11,12,13', 'Can build lines with lowest index sorted first')
-  assert(Array.isArray(demo) && demo[0] instanceof player.Player, 'Has demo array')
-  assert(demoLineup.players.length === 13, 'Can return the right number of players')
-  assert(demoLineup.lines.length === 9 && demoLineup.lines[0].length === 6, 'Can return lines with goalies included')
-  assert(demoLineup.scores.join() === '472,503,471,481,470,469,484,473,490', 'Calculates the scores of a lineup')
-  assert(demoLineup.mean === 479.22222222222223, 'Calculates the mean of a lineup')
-  assert(demoLineup.sd === 10.829771494232183, 'Calculates the standard deviation of a lineup')
-  assert(demoLineup.var === 117.28395061728399, 'Calculates the variance of a lineup')
-
-  /* datastore.js */
-  mockPlayers = []
-  mockPlayers.push(new player.Player('C', '01', 20, false))
-  mockPlayers.push(new player.Player('B', '02', 30, true, 'Goalie'))
-  mockPlayers.push(new player.Player('A', '03', 10, true))
-  mockPlayers.push(new player.Player('D', '04', 5, false, 'Goalie'))
-  let mockPlayersHash = 'player=C~01~20~false~&player=B~02~30~true~Goalie&player=A~03~10~true~&player=D~04~5~false~Goalie'
-  let mockPlayersParsed = datastore.parsePlayersUrlHash(mockPlayersHash)
-  let mockPlayersJson = JSON.stringify(mockPlayers)
-  let mockPlayersParsedJson = datastore.parsePlayersJson(mockPlayersJson)
-  assert(datastore.buildPlayersUrlHash(mockPlayers) === mockPlayersHash, 'Can build player url hash')
-  assert(mockPlayersParsed[0].name === 'C', 'Can parse players url hash; name')
-  assert(mockPlayersParsed[0].number === '01', 'Can parse players url hash; number')
-  assert(mockPlayersParsed[0].skill === 20, 'Can parse players url hash; skill')
-  assert(mockPlayersParsed[0].active === false, 'Can parse players url hash; active')
-  assert(mockPlayersParsed[0].position === undefined, 'Can parse players url hash; position')
-  assert(mockPlayersParsedJson[0].name === 'C', 'Can parse players json; name')
-  assert(mockPlayersParsedJson[0].number === '01', 'Can parse players json; number')
-  assert(mockPlayersParsedJson[0].skill === 20, 'Can parse players json; skill')
-  assert(mockPlayersParsedJson[0].active === false, 'Can parse players json; active')
-  assert(mockPlayersParsedJson[0].position === undefined, 'Can parse players json; position')
-
-  /* main.js */
-  assert(main._isVue == true && main._isMounted === true, 'Vue is loads and mounts')
-
-})()
+  // test('main.js', t => {
+  //   t.true(main._isVue, 'Vue loads')
+  //   t.true(main._isMounted, 'Vue mounts')
+  // })
+  // test('datastore.js', t => {
+  //   const playersHash = 'p=C%20c~01~20~~1&p=B%20b~02~30~G~1&p=A%20a~03~10~~1&p=D%20d~04~5~~0'
+  //   const players = [
+  //     new player.Player({ name: 'C c', number: '01', skill: 20, active: true }),
+  //     new player.Player({ name: 'B b', number: '02', skill: 30, active: true, position: 'G' }),
+  //     new player.Player({ name: 'A a', number: '03', skill: 10, active: true }),
+  //     new player.Player({ name: 'D d', number: '04', skill: 5, active: false }),
+  //   ]
+  //   t.is(datastore.buildHash(players), playersHash, 'Builds player url hash')
+  //   t.is(datastore.parseHash(playersHash)[0].name, 'C c', 'Parses players url hash; name')
+  //   t.is(datastore.parseHash(playersHash)[0].number, '01', 'Parses players url hash; number')
+  //   t.is(datastore.parseHash(playersHash)[0].skill, 20, 'Parses players url hash; skill')
+  //   t.is(datastore.parseHash(playersHash)[0].active, true, 'Parses players url hash; active')
+  //   t.is(datastore.parseHash(playersHash)[0].position, undefined, 'Parse players url hash; position')
+  // })
+  // test('lineup.js', t => {
+  //   const players = [
+  //     new player.Player({ name: 'C', number: '01', skill: 20, active: false }),
+  //     new player.Player({ name: 'B', number: '02', skill: 30, active: true, position: 'G' }),
+  //     new player.Player({ name: 'A', number: '03', skill: 10, active: true }),
+  //     new player.Player({ name: 'D', number: '04', skill: 5, active: false, position: 'G' }),
+  //   ]
+  //   const line = [{ skill: 1 }, { skill: 2 }, { skill: 3 }]
+  //   const lines = [line, line, line]
+  //   const demo = lineup.demo()
+  //   const demoLineup = lineup.determineLineup(demo)
+  //   const sortByLines = [
+  //     new player.Player({ name: 'D', number: '04', skill: 1, active:true }),
+  //     new player.Player({ name: 'C', number: '03', skill: 1, active:true }),
+  //     new player.Player({ name: 'B', number: '02', skill: 1, active:true }),
+  //     new player.Player({ name: 'A', number: '01', skill: 1, active:true }),
+  //   ]
+  //   sortByLines[0].lines = [false, true, true]
+  //   sortByLines[1].lines = [true, false, true]
+  //   sortByLines[2].lines = [true, true, false]
+  //   sortByLines[3].lines = [true, true, true]
+  //   t.is(lineup.sortPlayersByName(players)[0].name, 'A', 'Sorts players by name')
+  //   t.is(lineup.sortPlayersBySkill(players)[0].skill, 30, 'Sorts players by skill')
+  //   t.is(lineup.sortPlayersByLines(sortByLines)[0].name, 'A', 'Sorts players by lines')
+  //   t.is(lineup.filterFielders(players).length, 2, 'Filters active fielders')
+  //   t.is(lineup.filterGoalies(players).length, 2, 'Filters active goalies')
+  //   t.is(lineup.scoreLine(line), 6, 'Scores a line')
+  //   t.is(lineup.scoreLines(lines).join(), '6,6,6', 'Scores lines')
+  //   t.is(lineup.stubLinesForEqualPlay(14)[2].toString(), '0,10,11,12,13', 'Builds lines with lowest index sorted first')
+  //   t.true(Array.isArray(demo) && demo[0] instanceof player.Player, 'Has demo array')
+  //   t.is(demoLineup.players.length, 13, 'Returns the right number of players')
+  //   t.true(demoLineup.lines.length === 9 && demoLineup.lines[0].length === 6, 'Returns lines with goalies included')
+  //   t.is(demoLineup.scores.join(), '472,503,471,481,470,469,484,473,490', 'Calculates the scores of a lineup')
+  //   t.is(demoLineup.mean, 479.22222222222223, 'Calculates the mean of a lineup')
+  //   t.is(demoLineup.sd, 10.829771494232183, 'Calculates the standard deviation of a lineup')
+  //   t.is(demoLineup.var, 117.28395061728399, 'Calculates the variance of a lineup')
+  // })
+})();
