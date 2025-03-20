@@ -69,7 +69,9 @@ export class Model {
    * @param {Player[] | Player | string} newValue
    */
   #notifyListeners(eventType, newValue) {
-    this.#listeners.forEach((listener) => listener(eventType, newValue));
+    for (const listener of this.#listeners) {
+      listener(eventType, newValue);
+    }
   }
 
   get players() {
@@ -174,6 +176,7 @@ export class Model {
   buildLineup() {
     // FIXME: remove lines from Player class
     // Clear player lines
+    // biome-ignore lint/complexity/noForEach: <explanation>
     this.#players.forEach((p) => p.clearLines());
 
     // Get active fielders and sort by skill desc
