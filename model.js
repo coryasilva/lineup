@@ -238,7 +238,7 @@ export class Model {
       lines,
       players: finalPlayers,
       scores: finalLineupScores,
-      sd: standardDeviation(finalLineupScores),
+      sd: standardDeviation(...finalLineupScores),
     };
   }
 

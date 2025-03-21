@@ -169,6 +169,7 @@ export class ViewModel {
   };
 
   lineupBuildHandler = () => {
+    // FIXME: add validation
     console.log(this.model.validate());
     this.renderLineup();
     this.lineupDialog.showModal();
@@ -326,6 +327,11 @@ export class ViewModel {
     ]);
   }
 
+  /**
+   * Builds stat rows DOM elements for lineup table
+   * @param {number[]} scores 
+   * @param {number} standardDeviation 
+   */
   buildLineupStats(scores, standardDeviation) {
     return [
       t("tr", [

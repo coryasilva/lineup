@@ -15,27 +15,30 @@ export const generateArray = (length) => Array.from(Array(length).keys());
 
 /**
  * Sums an array of numbers
- * @param {number[]} arr
+ * @param {number[]} args
  */
-export const sum = (arr) => arr.reduce((sum, value) => sum + value, 0);
+export const sum = (...args) => args.reduce((sum, value) => sum + value, 0);
 
 /**
  * Averages an array of numbers
- * @param {number[]} arr
+ * @param {number[]} args
  */
-export const average = (arr) => (arr.length === 0 ? 0 : sum(arr) / arr.length);
+export const average = (...args) => (args.length === 0 ? 0 : sum(...args) / args.length);
 
 /**
  * Calculates variance for an array of numbers
- * @param {number[]} arr
+ * @param {...number} args
  */
-export const variance = (arr) => average(arr.map((value) => (value - average(arr)) ** 2));
+export const variance = (...args) => {
+  const avg = average(...args)
+  return average(...args.map((value) => (value - avg) ** 2));
+}
 
 /**
  * Calculated standard deviation for an array of numbers
- * @param {number[]} arr
+ * @param {...number} args
  */
-export const standardDeviation = (arr) => Math.sqrt(variance(arr));
+export const standardDeviation = (...args) => Math.sqrt(variance(...args));
 
 /**
  * Wraps a positive out of range index

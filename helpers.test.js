@@ -11,19 +11,19 @@ test("Generate array", (t) => {
 });
 
 test("Sum", (t) => {
-  t.is(helpers.sum([1, 2, 3]), 6);
+  t.is(helpers.sum(1, 2, 3), 6);
 });
 
 test("Average", (t) => {
-  t.is(helpers.average([1, 2, 3]), 2);
+  t.is(helpers.average(1, 2, 3), 2);
 });
 
 test("Variance", (t) => {
-  t.is(helpers.variance([1, 2, 3, 4, 5]), 2);
+  t.is(helpers.variance(1, 2, 3, 4, 5), 2);
 });
 
 test("Standard deviation", (t) => {
-  t.is(helpers.standardDeviation([1, 2, 3, 4, 5]), Math.SQRT2);
+  t.is(helpers.standardDeviation(1, 2, 3, 4, 5), Math.SQRT2);
 });
 
 test("Wrap index", (t) => {
