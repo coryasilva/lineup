@@ -17,4 +17,3 @@ test("Variance", (t) => {
 test("Standard deviation", (t) => {
   t.is(h.standardDeviation(1, 2, 3, 4, 5), Math.SQRT2);
 });
-

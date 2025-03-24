@@ -3,7 +3,7 @@ import { Player, PlayerPosition } from "./player.js";
 
 test("Player constructor", (t) => {
   const player = new Player({ id: "1", name: "Test 1", number: "01", skill: 25, active: true, position: "G" });
-  t.is(player.id, "1", "id")
+  t.is(player.id, "1", "id");
   t.is(player.name, "Test 1", "name");
   t.is(player.number, "01", "number");
   t.is(player.skill, 25, "skill");
@@ -33,4 +33,3 @@ test("Player from string", (t) => {
   t.is(player.position, "G", "position");
   t.is(player.active, true, "active");
 });
-  

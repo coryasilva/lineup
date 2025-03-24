@@ -156,22 +156,17 @@ export class Model {
     const avgFielderOcc = totalFielderOcc / fielders.length;
     const minFielderOcc = Math.ceil(avgFielderOcc) - 1;
     const maxFielderOcc = Math.floor(avgFielderOcc) + 1;
-    const maxGoalieOcc = Math.ceil(periodCount / goalies.length)
-    
+    const maxGoalieOcc = Math.ceil(periodCount / goalies.length);
+
     // Resulting data structure
     /** @type {Map<string | [Player, number[], number | number]>} */
-    const playerLines = new Map(players.map(p => [
-      p.id,
-      [
-        p,
-        Array.from({ length: lineCount }, () => false),
-        lineCount,
-      ]]
-    ));
+    const playerLines = new Map(
+      players.map((p) => [p.id, [p, Array.from({ length: lineCount }, () => false), lineCount]]),
+    );
 
     // Track lines sums and players
-    const lines = Array.from({ length: lineCount }, (_, i) => ({line: i + 1, sum: 0, players: new Map()}));
-    
+    const lines = Array.from({ length: lineCount }, (_, i) => ({ line: i + 1, sum: 0, players: new Map() }));
+
     // Track player occurances
     const playerOcc = players.reduce((o, f) => {
       o[f.id] = 0;
@@ -179,8 +174,8 @@ export class Model {
     }, {});
 
     // Greedy sort; skill desc
-    fielders.sort((a, b) => b.skill - a.skill)
-    goalies.sort((a, b) => b.skill - a.skill)
+    fielders.sort((a, b) => b.skill - a.skill);
+    goalies.sort((a, b) => b.skill - a.skill);
 
     // Repeat sorted players array
     const fieldersMax = [].concat(...Array(maxFielderOcc).fill(fielders));
@@ -191,17 +186,20 @@ export class Model {
     while (valid && counter < totalFielderOcc) {
       for (const fielder of fieldersMax) {
         if (playerOcc[fielder.id] >= maxFielderOcc) continue;
-        
-        const openLines = lines.filter(l => l.players.size < fieldersPerLine)
+
+        const openLines = lines.filter((l) => l.players.size < fieldersPerLine);
         if (openLines.length === 0) continue;
-        
-        const openLinesWithoutPlayer = openLines.filter(l => !l.players.has(fielder.id))
+
+        const openLinesWithoutPlayer = openLines.filter((l) => !l.players.has(fielder.id));
         if (openLinesWithoutPlayer.length === 0) continue;
-        
+
         // Choose line with open slots, without current player, and with lowest sum
-        const minSumIdx = openLinesWithoutPlayer.reduce((minIdx, l, i, arr) => l.sum < arr[minIdx].sum ? i : minIdx, 0)
-        const lineIdx = openLinesWithoutPlayer[minSumIdx].line - 1
-        
+        const minSumIdx = openLinesWithoutPlayer.reduce(
+          (minIdx, l, i, arr) => (l.sum < arr[minIdx].sum ? i : minIdx),
+          0,
+        );
+        const lineIdx = openLinesWithoutPlayer[minSumIdx].line - 1;
+
         openLinesWithoutPlayer[minSumIdx].players.set(fielder.id, fielder);
         openLinesWithoutPlayer[minSumIdx].sum += fielder.skill;
         playerOcc[fielder.id]++;
@@ -212,22 +210,22 @@ export class Model {
     }
 
     // Calc period sums to determine where to place goalies
-    const periodSums = lines.reduce((ps, ls, i) => {
-      const period = Math.ceil((i + 1) / linePerPeriod)
-      ps[period - 1].sum += ls.sum;
-      return ps;
-    }, Array.from(
-      { length: periodCount },
-      (_, i) => ({ period: i + 1, sum: 0, hasGoalie: false })
-    ));
+    const periodSums = lines.reduce(
+      (ps, ls, i) => {
+        const period = Math.ceil((i + 1) / linePerPeriod);
+        ps[period - 1].sum += ls.sum;
+        return ps;
+      },
+      Array.from({ length: periodCount }, (_, i) => ({ period: i + 1, sum: 0, hasGoalie: false })),
+    );
 
     // Fill the lines with goalies
     for (const goalie of goaliesMax) {
-      const openPeriods = periodSums.filter(p => p.hasGoalie === false);
+      const openPeriods = periodSums.filter((p) => p.hasGoalie === false);
       if (openPeriods.length === 0) continue;
-      
+
       const { period } = openPeriods.sort((a, b) => a.sum - b.sum)[0];
-      
+
       for (let l = 0; l > -1 * linePerPeriod; l--) {
         const lineIdx = period * linePerPeriod - 1 + l;
         lines[lineIdx].players.set(goalie.id, goalie);
@@ -240,7 +238,7 @@ export class Model {
     }
 
     // Transform data for return
-    const lineSums = lines.map(l => l.sum);
+    const lineSums = lines.map((l) => l.sum);
     const playerRows = Array.from(playerLines.values()).sort((a, b) => a[2] - b[2]);
 
     return {

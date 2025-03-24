@@ -328,8 +328,8 @@ export class ViewModel {
 
   /**
    * Builds stat rows DOM elements for lineup table
-   * @param {number[]} lineSums 
-   * @param {number} standardDeviation 
+   * @param {number[]} lineSums
+   * @param {number} standardDeviation
    */
   buildLineupStats(lineSums, standardDeviation) {
     return [

@@ -7,30 +7,40 @@
   "main": "index.html",
   "type": "module",
   "config": {
-    "css_in": "main.css",
-    "css_out": "main.bundle.css",
-    "js_in": "main.js",
-    "js_out": "main.bundle.js"
+    "css_in": "src/main.css",
+    "css_out": "dist/main.bundle.css",
+    "js_in": "src/main.js",
+    "js_out": "dist/main.bundle.js"
   },
   "scripts": {
-    "dev": "npm-run-all --parallel dev:* --race",
-    "dev:css": "npx @tailwindcss/cli -i $npm_package_config_css_in -o $npm_package_config_css_out --minify --watch",
-    "dev:test": "ava --watch",
-    "dev:js": "esbuild $npm_package_config_js_in --outfile=$npm_package_config_js_out sourcemap --bundle --minify --watch",
-    "test": "ava",
-    "build": "npm-run-all --sequential lint --parallel test build:*",
+    "start": "run-p serve watch",
+    "watch": "run-p watch:* --race",
+    "watch:html": "onchange 'src/**/*.html' -- npm run copy:html",
+    "watch:css": "npx @tailwindcss/cli -i $npm_package_config_css_in -o $npm_package_config_css_out --minify --watch",
+    "watch:test": "ava --watch",
+    "watch:js": "esbuild $npm_package_config_js_in --outfile=$npm_package_config_js_out --sourcemap --bundle --minify --watch",
+    "build": "npm-run-all --sequential lint --parallel build:*",
+    "build:html": "npm run copy:html",
     "build:css": "npx @tailwindcss/cli -i $npm_package_config_css_in -o $npm_package_config_css_out --minify",
+    "build:test": "ava",
     "build:js": "esbuild $npm_package_config_js_in --outfile=$npm_package_config_js_out --sourcemap --bundle --minify",
-    "lint": "npx @biomejs/biome check ."
+    "copy:html": "html-minifier --collapse-whitespace --remove-comments --input-dir src --file-ext html --output-dir dist",
+    "lint": "npx @biomejs/biome check .",
+    "serve": "browser-sync start -s --files 'dist/**/*.(js|css|html)' --ss 'dist' --port 8080 --reload-debounce 500",
+    "deploy": "npm run build && gh-pages -d dist"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
     "@tailwindcss/cli": "^4.0.14",
     "ava": "^6.2.0",
+    "browser-sync": "^3.0.3",
     "esbuild": "^0.25.1",
+    "gh-pages": "^6.3.0",
     "global-jsdom": "^26.0.0",
+    "html-minifier": "^4.0.0",
     "jsdom": "^26.0.0",
     "npm-run-all": "^4.1.5",
+    "onchange": "^7.1.0",
     "tailwindcss": "^4.0.14"
   }
 }

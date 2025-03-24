@@ -18,9 +18,9 @@ export const average = (...args) => (args.length === 0 ? 0 : sum(...args) / args
  * @param {...number} args
  */
 export const variance = (...args) => {
-  const avg = average(...args)
+  const avg = average(...args);
   return average(...args.map((value) => (value - avg) ** 2));
-}
+};
 
 /**
  * Calculated standard deviation for an array of numbers
