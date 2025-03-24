@@ -6,21 +6,30 @@
   "license": "ISC",
   "main": "index.html",
   "type": "module",
+  "config": {
+    "css_in": "main.css",
+    "css_out": "main.bundle.css",
+    "js_in": "main.js",
+    "js_out": "main.bundle.js"
+  },
   "scripts": {
     "dev": "npm-run-all --parallel dev:* --race",
-    "dev:css": "npx @tailwindcss/cli -i input.css -o output.css --watch --minify",
+    "dev:css": "npx @tailwindcss/cli -i $npm_package_config_css_in -o $npm_package_config_css_out --minify --watch",
     "dev:test": "ava --watch",
+    "dev:js": "esbuild $npm_package_config_js_in --outfile=$npm_package_config_js_out sourcemap --bundle --minify --watch",
     "test": "ava",
     "build": "npm-run-all --sequential lint --parallel test build:*",
-    "build:css": "npx @tailwindcss/cli -i input.css -o output.css --minify",
+    "build:css": "npx @tailwindcss/cli -i $npm_package_config_css_in -o $npm_package_config_css_out --minify",
+    "build:js": "esbuild $npm_package_config_js_in --outfile=$npm_package_config_js_out --sourcemap --bundle --minify",
     "lint": "npx @biomejs/biome check ."
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
     "@tailwindcss/cli": "^4.0.14",
     "ava": "^6.2.0",
+    "esbuild": "^0.25.1",
+    "global-jsdom": "^26.0.0",
     "jsdom": "^26.0.0",
-    "jsdom-global": "^3.0.2",
     "npm-run-all": "^4.1.5",
     "tailwindcss": "^4.0.14"
   }
