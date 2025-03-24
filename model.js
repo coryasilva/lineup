@@ -1,4 +1,4 @@
-import { generateArray, minimumIndex, standardDeviation, wrapIndex } from "./helpers.js";
+import { standardDeviation } from "./helpers.js";
 import { Player } from "./player.js";
 
 // TODO: Figure out how to make discriminated union with @callback
@@ -83,11 +83,11 @@ export class Model {
   }
 
   get activeGoalies() {
-    return Array.from(this.#players.values()).filter((p) => p.isGoalie() === true && p.active);
+    return Array.from(this.#players.values()).filter((p) => p.isGoalie() && p.active);
   }
 
   get activeFielders() {
-    return Array.from(this.#players.values()).filter((p) => p.isGoalie() === false && p.active);
+    return Array.from(this.#players.values()).filter((p) => !p.isGoalie() && p.active);
   }
 
   get activePlayers() {
@@ -123,122 +123,133 @@ export class Model {
     this.#commit();
   }
 
-  /**
-   * Sums the score of a line.
-   * @param {Player[]} line
-   */
-  scoreLine(line) {
-    return line.reduce((acc, { skill = 0 }) => acc + skill, 0);
-  }
-
-  /**
-   * Builds an array of lines (array) with player indexes based on number of fielders
-   * This accomplishes the Special Olympic rules of giving players equal opportunities to play:
-   *   By the completion of the game, the total number of lines played by any one player,
-   *   excluding the goalkeeper who is designated to play the entire game, must not exceed the
-   *   total number of lines player by any other teammate by more than one.
-   * @param {number} fielderCount
-   */
-  stubLinesForEqualPlay(fielderCount) {
-    const players = generateArray(fielderCount);
-    const lines = []; // TODO: fix types
-    let sequenceIndex = 0;
-    // 3 lines per period; 3 period = 9 lines
-    for (let i = 0; i < 9; i++) {
-      const line = [];
-      // 5 fielders (ignore goalie position for now)
-      for (let j = 0; j < 5; j++) {
-        line.push(players[wrapIndex(sequenceIndex++, players.length)]);
-      }
-      // Sort the lowest integer first so we maximize the use of
-      // the more skilled players and do not overwhelm
-      // the less able players.
-      lines.push(line.sort((a, b) => a - b));
-    }
-    return lines;
-  }
-
   validate() {
     const errors = [];
     const activePlayerCount = this.activePlayers.length;
     const activeGoalieCount = this.activeGoalies.length;
-    if (activeGoalieCount === 1) errors.push("No Goalie! At least one Goalie is required.");
+    if (activeGoalieCount === 0) errors.push("No Goalie! At least one Goalie is required.");
     if (activeGoalieCount > 3) errors.push("Too many active goalies, maximum of 3 allowed.");
-    if (activePlayerCount < 11) errors.push("Too few active players, minimum of 11 players.");
-    if (activePlayerCount < 11) errors.push("Too many active players, maximum of 16 players.");
+    if (activePlayerCount < 6) errors.push("Too few active players, minimum of 6 players.");
+    if (activePlayerCount > 16) errors.push("Too many active players, maximum of 16 players.");
     return errors;
   }
 
   /**
-   * Greedy algorithm fills the lowest scoring lineups with the most
-   * skilled players maximizing the use of the best players.
+   * Greedy one-per-category balanced number partitioning
+   * that maintains equal play and equal sum skill lineups.
    */
   buildLineup() {
-    // FIXME: remove lines from Player class
-    // Clear player lines
-    // biome-ignore lint/complexity/noForEach: <explanation>
-    this.#players.forEach((p) => p.clearLines());
+    // Data
+    const valid = this.validate().length === 0;
+    const fielders = this.activeFielders;
+    const goalies = this.activeGoalies;
+    const players = fielders.concat(goalies);
 
-    // Get active fielders and sort by skill desc
-    const fielders = this.activeFielders.sort((a, b) => b.skill - a.skill);
+    // Constants
+    const periodCount = 3;
+    const linePerPeriod = 3;
+    const lineCount = periodCount * linePerPeriod;
+    const fieldersPerLine = 5; // Players on court (minus goalie)
 
-    // Get active goalies and sort by skill
-    const goalies = this.activeGoalies.sort((a, b) => b.skill - a.skill);
+    // Determine min/max occurances for equal play
+    const totalFielderOcc = lineCount * fieldersPerLine;
+    const avgFielderOcc = totalFielderOcc / fielders.length;
+    const minFielderOcc = Math.ceil(avgFielderOcc) - 1;
+    const maxFielderOcc = Math.floor(avgFielderOcc) + 1;
+    const maxGoalieOcc = Math.ceil(periodCount / goalies.length)
+    
+    // Resulting data structure
+    /** @type {Map<string | [Player, number[], number | number]>} */
+    const playerLines = new Map(players.map(p => [
+      p.id,
+      [
+        p,
+        Array.from({ length: lineCount }, () => false),
+        lineCount,
+      ]]
+    ));
 
-    // Stub the line up template (only includes fielders)
-    const lines = this.stubLinesForEqualPlay(fielders.length);
+    // Track lines sums and players
+    const lines = Array.from({ length: lineCount }, (_, i) => ({line: i + 1, sum: 0, players: new Map()}));
+    
+    // Track player occurances
+    const playerOcc = players.reduce((o, f) => {
+      o[f.id] = 0;
+      return o;
+    }, {});
 
-    // loop over periods and alternate goalies
-    for (let i = 1; i <= 3; i++) {
-      for (let g = 1; g <= 3; g++) {
-        const goalie = goalies[wrapIndex(i - 1, goalies.length)];
-        const lineIndex = i * 3 - g;
-        goalie.lines[lineIndex] = true;
-        lines[lineIndex].push(goalie);
+    // Greedy sort; skill desc
+    fielders.sort((a, b) => b.skill - a.skill)
+    goalies.sort((a, b) => b.skill - a.skill)
+
+    // Repeat sorted players array
+    const fieldersMax = [].concat(...Array(maxFielderOcc).fill(fielders));
+    const goaliesMax = [].concat(...Array(maxGoalieOcc).fill(goalies));
+
+    // Fill the lines with fielders
+    let counter = 0;
+    while (valid && counter < totalFielderOcc) {
+      for (const fielder of fieldersMax) {
+        if (playerOcc[fielder.id] >= maxFielderOcc) continue;
+        
+        const openLines = lines.filter(l => l.players.size < fieldersPerLine)
+        if (openLines.length === 0) continue;
+        
+        const openLinesWithoutPlayer = openLines.filter(l => !l.players.has(fielder.id))
+        if (openLinesWithoutPlayer.length === 0) continue;
+        
+        // Choose line with open slots, without current player, and with lowest sum
+        const minSumIdx = openLinesWithoutPlayer.reduce((minIdx, l, i, arr) => l.sum < arr[minIdx].sum ? i : minIdx, 0)
+        const lineIdx = openLinesWithoutPlayer[minSumIdx].line - 1
+        
+        openLinesWithoutPlayer[minSumIdx].players.set(fielder.id, fielder);
+        openLinesWithoutPlayer[minSumIdx].sum += fielder.skill;
+        playerOcc[fielder.id]++;
+        playerLines.get(fielder.id)[1][lineIdx] = true;
+        playerLines.get(fielder.id)[2] = Math.min(playerLines.get(fielder.id)[2], lineIdx);
+        counter++;
       }
     }
 
-    // loop over fielders and map fill the lineup
-    let playerIndex = 0;
-    while (playerIndex < fielders.length) {
-      // (re)Score the lines
-      const lineScores = lines.map(this.scoreLine);
+    // Calc period sums to determine where to place goalies
+    const periodSums = lines.reduce((ps, ls, i) => {
+      const period = Math.ceil((i + 1) / linePerPeriod)
+      ps[period - 1].sum += ls.sum;
+      return ps;
+    }, Array.from(
+      { length: periodCount },
+      (_, i) => ({ period: i + 1, sum: 0, hasGoalie: false })
+    ));
 
-      // get the lines with the lowest score
-      const lineIndex = minimumIndex(lineScores);
-      const line = lines[lineIndex];
-      let replaceIndex;
-      // Find the first open slot (array position with a number)
-      for (let i = 0; i < line.length; i++) {
-        if (typeof line[i] === "number") {
-          replaceIndex = line[i];
-          break;
-        }
+    // Fill the lines with goalies
+    for (const goalie of goaliesMax) {
+      const openPeriods = periodSums.filter(p => p.hasGoalie === false);
+      if (openPeriods.length === 0) continue;
+      
+      const { period } = openPeriods.sort((a, b) => a.sum - b.sum)[0];
+      
+      for (let l = 0; l > -1 * linePerPeriod; l--) {
+        const lineIdx = period * linePerPeriod - 1 + l;
+        lines[lineIdx].players.set(goalie.id, goalie);
+        lines[lineIdx].sum += goalie.skill;
+        playerOcc[goalie.id]++;
+        playerLines.get(goalie.id)[1][lineIdx] = true;
+        playerLines.get(goalie.id)[2] = Math.min(playerLines.get(goalie.id)[2], lineIdx);
+        periodSums[period - 1].hasGoalie = true;
       }
-
-      // Replace all occurrances of "replace" with current player index
-      for (let i = 0; i < lines.length; i++) {
-        for (let p = 0; p < lines[i].length; p++) {
-          if (typeof lines[i][p] === "number" && lines[i][p] === replaceIndex) {
-            fielders[playerIndex].lines[i] = true;
-            lines[i][p] = fielders[playerIndex];
-          }
-        }
-      }
-      // Increment the player index
-      playerIndex++;
     }
 
-    const finalLineupScores = lines.map(this.scoreLine);
-
-    // Sort the fielders by line; boolean asc
-    const finalPlayers = [...fielders, ...goalies].sort((a, b) => (a.lines.toString() > b.lines.toString() ? -1 : 1));
+    // Transform data for return
+    const lineSums = lines.map(l => l.sum);
+    const playerRows = Array.from(playerLines.values()).sort((a, b) => a[2] - b[2]);
 
     return {
-      lines,
-      players: finalPlayers,
-      scores: finalLineupScores,
-      sd: standardDeviation(...finalLineupScores),
+      minFielderOcc,
+      maxFielderOcc,
+      playerOcc,
+      playerRows,
+      lineSums,
+      standardDeviation: standardDeviation(...lineSums),
     };
   }
 

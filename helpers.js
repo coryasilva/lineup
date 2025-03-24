@@ -2,26 +2,14 @@
 export const xid = () => new Date().getTime().toString(36);
 
 /**
- * Gets the index of lowest value in an array of numbers
- * @param {number[]} arr
- */
-export const minimumIndex = (arr) => arr.reduce((iMin, val, i, arr) => (val < arr[iMin] ? i : iMin), 0);
-
-/**
- * Creates an array with values equal to their index
- * @param {number} length
- */
-export const generateArray = (length) => Array.from(Array(length).keys());
-
-/**
  * Sums an array of numbers
- * @param {number[]} args
+ * @param {...number} args
  */
 export const sum = (...args) => args.reduce((sum, value) => sum + value, 0);
 
 /**
  * Averages an array of numbers
- * @param {number[]} args
+ * @param {...number} args
  */
 export const average = (...args) => (args.length === 0 ? 0 : sum(...args) / args.length);
 
@@ -39,13 +27,6 @@ export const variance = (...args) => {
  * @param {...number} args
  */
 export const standardDeviation = (...args) => Math.sqrt(variance(...args));
-
-/**
- * Wraps a positive out of range index
- * @param {number} index
- * @param {number} length
- */
-export const wrapIndex = (index, length) => ((index % length) + length) % length;
 
 /**
  * Easier HTML tag creation

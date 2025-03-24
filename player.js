@@ -34,7 +34,6 @@ export class Player {
       .includes(player?.position?.toUpperCase())
       ? player.position.toUpperCase()
       : PlayerPosition.FIELDER;
-    this.clearLines();
   }
 
   /**
@@ -43,16 +42,6 @@ export class Player {
    */
   isGoalie() {
     return this.position === "G";
-  }
-
-  /**
-   * TODO: Does this belong here?
-   * Clears the lines
-   * @return Array
-   */
-  clearLines() {
-    this.lines = Array(9).fill(false);
-    return this.lines;
   }
 
   toString(delim = ",") {

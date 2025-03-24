@@ -2,9 +2,7 @@ import { $, t, xid } from "./helpers.js";
 import { Player } from "./player.js";
 
 // TODO: Validate lineup
-// TODO: Revamp algo ()
-// TODO: Bundle & minify JS
-
+// TODO: Add build automation
 export class ViewModel {
   /**
    * @param {import("./model.js").Model} model
@@ -305,8 +303,9 @@ export class ViewModel {
   /**
    * Builds a player row DOM element for lineup table.
    * @param {Player} player
+   * @param {boolean[]} lines
    */
-  buildLineupPlayer(player) {
+  buildLineupPlayer(player, lines) {
     /** @param {boolean} marked */
     const dot = (marked) =>
       t("td", { class: "py-2 px-1 sm:px-2 border-x border-gray-800 text-center text-gray-200" }, [
@@ -323,20 +322,20 @@ export class ViewModel {
       t("td", { class: "p-2 border-gray-800 text-gray-200 font-medium" }, player.name),
       t("td", { class: "p-2 border-gray-800 text-gray-200 font-medium" }, player.number),
       t("td", { class: "p-2 border-gray-800 text-gray-200 text-center" }, player.position),
-      ...player.lines.map((l) => dot(l)),
+      ...lines.map((l) => dot(l)),
     ]);
   }
 
   /**
    * Builds stat rows DOM elements for lineup table
-   * @param {number[]} scores 
+   * @param {number[]} lineSums 
    * @param {number} standardDeviation 
    */
-  buildLineupStats(scores, standardDeviation) {
+  buildLineupStats(lineSums, standardDeviation) {
     return [
       t("tr", [
         t("td", { colspan: "3", class: "pt-2 px-2 text-right" }, "Line scores:"),
-        ...scores.map((s) => t("td", { class: "pt-2 px-1 sm:px-2" }, s)),
+        ...lineSums.map((s) => t("td", { class: "pt-2 px-1 sm:px-2" }, s)),
       ]),
       t("tr", {}, [
         t("td", { colspan: "3", class: "px-2 text-right" }, "Standard deviation:"),
@@ -349,13 +348,13 @@ export class ViewModel {
    * Renders Lineup table's player and stat rows in DOM.
    */
   renderLineup() {
-    const { players, scores, sd } = this.model.buildLineup();
+    const { playerRows, lineSums, standardDeviation } = this.model.buildLineup();
     const tbody = this.lineupTable.querySelector("tbody");
     const tbodyFrag = document.createDocumentFragment();
     const tfoot = this.lineupTable.querySelector("tfoot");
     const tfootFrag = document.createDocumentFragment();
-    tbodyFrag.append(...players.map(this.buildLineupPlayer));
-    tfootFrag.append(...this.buildLineupStats(scores, sd));
+    tbodyFrag.append(...playerRows.map(([player, lines]) => this.buildLineupPlayer(player, lines)));
+    tfootFrag.append(...this.buildLineupStats(lineSums, standardDeviation));
     tbody.replaceChildren(tbodyFrag);
     tfoot.replaceChildren(tfootFrag);
   }
