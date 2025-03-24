@@ -1,0 +1,7 @@
+@import "tailwindcss";
+
+/* npx @tailwindcss/cli -i input.css -o output.css --watch */
+
+::selection {
+  @apply text-black bg-yellow-500;
+}
