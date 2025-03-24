@@ -57,47 +57,51 @@ test("Player CRUD + listener", (t) => {
   const model = new Model();
   model.addListener((t, v) => calls.push([t, v]));
   t.is(model.playerCount, 0);
-  
+
   // Create
-  model.createPlayer(new Player({
-    id: "1",
-    name: "P1",
-    number: "01",
-    skill: 50,
-    active: true,
-    position: "F",
-  }));
+  model.createPlayer(
+    new Player({
+      id: "1",
+      name: "P1",
+      number: "01",
+      skill: 50,
+      active: true,
+      position: "F",
+    }),
+  );
   t.is(model.playerCount, 1);
   t.is(model.getPlayer("1").name, "P1");
   t.is(calls[0][0], "create");
   t.is(calls[0][1].id, "1");
-  
+
   // Update
-  model.updatePlayer(new Player({
-    id: "1",
-    name: "X1",
-    number: "01",
-    skill: 50,
-    active: true,
-    position: "F",
-  }));
+  model.updatePlayer(
+    new Player({
+      id: "1",
+      name: "X1",
+      number: "01",
+      skill: 50,
+      active: true,
+      position: "F",
+    }),
+  );
   t.is(model.playerCount, 1);
   t.is(model.getPlayer("1").name, "X1");
   t.is(calls[1][0], "update");
   t.is(calls[1][1].name, "X1");
-  
+
   // Delete
   model.deletePlayer("1");
   t.is(model.playerCount, 0);
   t.is(calls[2][0], "delete");
   t.is(calls[2][1], "1");
-})
+});
 
 test("Demo commit, load, and build lineup", (t) => {
   window.location.hash = "";
   const model = new Model();
   t.is(window.location.hash, "");
-  model.loadDemo()
+  model.loadDemo();
   t.snapshot(window.location.hash);
   t.snapshot(model.buildLineup());
-})
+});

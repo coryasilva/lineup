@@ -198,7 +198,7 @@ export class ViewModel {
   updateRosterAlert() {
     const errors = this.model.validate();
     const ulFrag = document.createDocumentFragment();
-    ulFrag.append(...errors.map(e => t("li", e)));
+    ulFrag.append(...errors.map((e) => t("li", e)));
     this.rosterAlert.querySelector("ul").replaceChildren(ulFrag);
     if (errors.length === 0) this.rosterAlert.classList.add("hidden");
     if (errors.length > 0) this.rosterAlert.classList.remove("hidden");
