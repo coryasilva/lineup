@@ -1,8 +1,6 @@
 import { $, t, xid } from "./helpers.js";
 import { Player } from "./player.js";
 
-// TODO: Validate lineup
-// TODO: Add build automation
 export class ViewModel {
   /**
    * @param {import("./model.js").Model} model
@@ -16,6 +14,7 @@ export class ViewModel {
     this.rosterSummary = $("#roster-summary");
     this.rosterEmpty = $("#roster-empty");
     this.rosterList = $("#roster > [role='list']");
+    this.rosterAlert = $("#roster > [role='alert']");
     this.playerAddButton = $("#player-add-button");
     this.playerDialog = $("#player-dialog");
     this.playerForm = $("form[name='player']");
@@ -167,8 +166,10 @@ export class ViewModel {
   };
 
   lineupBuildHandler = () => {
-    // FIXME: add validation
-    console.log(this.model.validate());
+    if (this.model.validate().length) {
+      this.updateRosterAlert();
+      return;
+    }
     this.renderLineup();
     this.lineupDialog.showModal();
   };
@@ -187,6 +188,20 @@ export class ViewModel {
     } else {
       this.rosterEmpty.classList.add("hidden");
     }
+
+    // Hide alert if it was shown and error was resolved
+    if (this.model.validate().length === 0) {
+      this.rosterAlert.classList.add("hidden");
+    }
+  }
+
+  updateRosterAlert() {
+    const errors = this.model.validate();
+    const ulFrag = document.createDocumentFragment();
+    ulFrag.append(...errors.map(e => t("li", e)));
+    this.rosterAlert.querySelector("ul").replaceChildren(ulFrag);
+    if (errors.length === 0) this.rosterAlert.classList.add("hidden");
+    if (errors.length > 0) this.rosterAlert.classList.remove("hidden");
   }
 
   /**
@@ -281,6 +296,7 @@ export class ViewModel {
       this.buildPlayer(player),
       this.rosterList.querySelector(`[data-player-id="${player.id}"`),
     );
+    this.updateRoster();
   }
 
   /**

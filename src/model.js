@@ -127,7 +127,7 @@ export class Model {
     const errors = [];
     const activePlayerCount = this.activePlayers.length;
     const activeGoalieCount = this.activeGoalies.length;
-    if (activeGoalieCount === 0) errors.push("No Goalie! At least one Goalie is required.");
+    if (activeGoalieCount === 0) errors.push("No goalies, at least one Goalie is required.");
     if (activeGoalieCount > 3) errors.push("Too many active goalies, maximum of 3 allowed.");
     if (activePlayerCount < 6) errors.push("Too few active players, minimum of 6 players.");
     if (activePlayerCount > 16) errors.push("Too many active players, maximum of 16 players.");
